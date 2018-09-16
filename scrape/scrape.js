@@ -1,4 +1,6 @@
-var osmosis = require('osmosis')
+const osmosis = require('osmosis')
+const moment = require('moment')
+const stringSimilarity = require('string-similarity')
 
 const EXAMPLES = [
     'http://coastalcleanup.nus.edu.sg/results/2017/nw-lck-erm.htm', // 2017
@@ -17,13 +19,14 @@ function cleanup (data) {
     return data.body
         .replace(/\r\n\s+/g, '|')
         .replace(/;\s+/g, '|')
-        // .replace(/ - /g, '|')
+        .replace(/ - /g, '=')
         .replace('International|Coastal Cleanup, Singapore', 'ICCS Singapore')
         .replace('DEBRIS SUMMARY|', '')
         .replace('CLEANUP SUMMARY|', '')
         .replace('DEBRIS SUMMARY (PIE CHART)|', '')
         .replace('TOP 10 ITEMS at a Glance|', '')
         .replace('Total Distance|(metres)|', 'Total distance in meters|')
+        .replace('Date of|Cleanup', 'Date of cleanup')
         .replace('Total number of|participants', 'Total number of participants')
         .replace('Total number of|trash bags filled', 'Total number of trash bags filled')
         .replace('Weight of trash|bags collected (kg)', 'Weight of trash bags collected (kg)')
@@ -34,6 +37,7 @@ function cleanup (data) {
         .replace('Appliances (fridges, washers,|etc)', 'Appliances (fridges, washers, etc)')
         .replace('Appliances (fridges|washers, etc)', 'Appliances (fridges, washers, etc)')
         .replace('Items of Local|Concern', 'Items of Local Concern')
+        .replace('Items of|Local Concern', 'Items of Local Concern')
         .replace('Take Out Containers|(plastic)', 'Take out containers (plastic)')
         .replace('Take Out Containers|(foam)', 'Take out containers (foam)')
         .replace('Food Wrappers (candy,|chips, etc)', 'Food Wrappers (candy, chips, etc)')
@@ -70,7 +74,7 @@ function year(body, index, csv) {
 }
 
 osmosis
-.get(EXAMPLES[1])
+.get(EXAMPLES[0])
 // .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
 // .follow('li a@href')
 .set({
@@ -86,6 +90,9 @@ osmosis
 
     console.log(JSON.stringify(body))
 
+    // URL
+    csv['URL'] = document.location.href
+
     // STEP THROUGH
     body.forEach((element, index) => {
         try {
@@ -93,15 +100,40 @@ osmosis
 
             // YEAR
             csv = year(body, index, csv)
-            csv['URL'] = document.location.href
 
-
+            // FIRST PASS
+            Object.keys(csv).forEach((key) => {
+                if (key.includes('Most Unusual Items') && stringSimilarity.compareTwoStrings(element, key) > 0.8) {
+                    csv[key] = body.slice(index + 1).join(' ')
+                }
+                else if (stringSimilarity.compareTwoStrings(element, key) > 0.8) {
+                    csv[key] = body[index + 1]
+                }
+            })  
+            
         } catch (e) {
 
+        }
+
+        if (index === body.length - 1) {
+            console.log('------')
+        }
+    })
+
+    Object.keys(csv).forEach((key) => {
+        if (key.includes('Date of Cleanup')) {
+            csv[key] = moment(csv[key]).toISOString()
         }
     })
 
     console.log("CSV")
+
+    for (let [key, value] of Object.entries(csv)) {
+        // if (!Number(value) === NaN) {
+        //     csv[key] = Number(value)
+        // }
+    }
+
     console.log(csv)
 
     next(document, data)
@@ -112,25 +144,3 @@ osmosis
 })
 // .error(console.log)
 // .debug(console.log)
-
-
-
-
-
-// const KEYS_PAGE = [
-// "Site Location",
-// "Date of Cleanup",
-// "Organization",
-// "Name of Organiser",
-// "Total number of participants",
-// "Total number of trash bags filled",
-// "Weight of trash bags collected (kg)",
-// "Total Distance (metres)",
-
-// "Most Likely to Find Items",
-// "Fishing Gear",
-// "Packaging Materials",
-// "Other Trash",
-// "Personal Hygiene",
-// "Items of Local Concern",
-// "TOTAL ITEMS" ]
