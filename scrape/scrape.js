@@ -41,6 +41,8 @@ function cleanup (data) {
         .replace('Take Out Containers|(plastic)', 'Take out containers (plastic)')
         .replace('Take Out Containers|(foam)', 'Take out containers (foam)')
         .replace('Food Wrappers (candy,|chips, etc)', 'Food Wrappers (candy, chips, etc)')
+        .replace('Food Wrappers (candy,|chips, etc)', 'Food Wrappers (candy, chips, etc)')
+        .replace(/1 meter = 1 piece/g, '')
         
 
 
@@ -73,6 +75,19 @@ function year(body, index, csv) {
     return csv
 }
 
+function zonelocation (site) {
+    let ZONE = null
+    for (let [key, values] of Object.entries(ZONES)) {
+        values.forEach((value) => {
+            if (stringSimilarity.compareTwoStrings(site, value) > 0.7) {
+                ZONE = key
+            }
+        })
+    }
+
+    return ZONE
+}
+
 osmosis
 .get(EXAMPLES[0])
 // .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
@@ -88,7 +103,7 @@ osmosis
 
     let csv = Object.assign({}, CSV_KEYS)
 
-    console.log(JSON.stringify(body))
+    // console.log(JSON.stringify(body))
 
     // URL
     csv['URL'] = document.location.href
@@ -126,13 +141,15 @@ osmosis
         }
     })
 
-    console.log("CSV")
-
+    // MAKE A NUMEBR
     for (let [key, value] of Object.entries(csv)) {
-        // if (!Number(value) === NaN) {
-        //     csv[key] = Number(value)
-        // }
+        if (value && value.length > 0 && /^-{0,1}\d+$/.test(value.replace(/,/g, ''))) {
+            csv[key] = Number(value.replace(/,/g, ''))
+        }
     }
+
+    // FIGURE OUT ZONE
+    csv['Zone Location'] = zonelocation(csv['Site Location'])
 
     console.log(csv)
 
@@ -144,3 +161,7 @@ osmosis
 })
 // .error(console.log)
 // .debug(console.log)
+
+
+// console.log(zonelocation('Lim Chu Kang Beach'))
+// console.log(stringSimilarity.compareTwoStrings('Lim Chu Kang Beach', 'Lim Chu Kang mangrove'))
