@@ -8,24 +8,6 @@ const EXAMPLES = [
     'http://coastalcleanup.nus.edu.sg/results/2013/nw-lcke-sas.htm', // 2013
 ]
 
-const KEYS_PAGE = [
-"Site Location",
-"Date of Cleanup",
-"Organization",
-"Name of Organiser",
-"Total number of participants",
-"Total number of trash bags filled",
-"Weight of trash bags collected (kg)",
-"Total Distance (metres)",
-
-"Most Likely to Find Items",
-"Fishing Gear",
-"Packaging Materials",
-"Other Trash",
-"Personal Hygiene",
-"Items of Local Concern",
-"TOTAL ITEMS" ]
-
 const CSV_KEYS = require('../data/keys.json')
 const ZONES = require('../data/zones.json')
 
@@ -48,8 +30,15 @@ function cleanup (data) {
         .replace('Total distance|(metres)', 'Weight of trash bags collected (kg)')
         .replace('Food Wrappers (candy, chips,|etc)','Food Wrappers (candy chips etc)')
         .replace('Fishing line ( 1 meter = 1|piece)','Fishing line ( 1 meter = 1 piece )')
+        .replace('Fishing line ( 1 meter =|1 piece)','Fishing line ( 1 meter = 1 piece )')
         .replace('Appliances (fridges, washers,|etc)', 'Appliances (fridges, washers, etc)')
+        .replace('Appliances (fridges|washers, etc)', 'Appliances (fridges, washers, etc)')
         .replace('Items of Local|Concern', 'Items of Local Concern')
+        .replace('Take Out Containers|(plastic)', 'Take out containers (plastic)')
+        .replace('Take Out Containers|(foam)', 'Take out containers (foam)')
+        .replace('Food Wrappers (candy,|chips, etc)', 'Food Wrappers (candy, chips, etc)')
+        
+
 
         // .replace('Most Likely to Find Items|', '')
         // .replace('Fishing Gear||', '')
@@ -81,7 +70,7 @@ function year(body, index, csv) {
 }
 
 osmosis
-.get(EXAMPLES[0])
+.get(EXAMPLES[1])
 // .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
 // .follow('li a@href')
 .set({
@@ -123,3 +112,25 @@ osmosis
 })
 // .error(console.log)
 // .debug(console.log)
+
+
+
+
+
+// const KEYS_PAGE = [
+// "Site Location",
+// "Date of Cleanup",
+// "Organization",
+// "Name of Organiser",
+// "Total number of participants",
+// "Total number of trash bags filled",
+// "Weight of trash bags collected (kg)",
+// "Total Distance (metres)",
+
+// "Most Likely to Find Items",
+// "Fishing Gear",
+// "Packaging Materials",
+// "Other Trash",
+// "Personal Hygiene",
+// "Items of Local Concern",
+// "TOTAL ITEMS" ]
