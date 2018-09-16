@@ -1,6 +1,6 @@
 ## ICCS
 
-International Costal Cleanup Singapore
+A volunteer project for [International Costal Cleanup Singapore](http://coastalcleanup.nus.edu.sg/) that has been running from 1992 to consolidate data cleanup statistics and make it available visually for general awareness.
 
 ## Schema
 
