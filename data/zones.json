@@ -1,0 +1,61 @@
+{
+	"North West Zone": [
+		"Lim Chu Kang mangrove",
+		"Lim Chu Kang East mangrove",
+		"Sungei Buloh West mangrove",
+		"Kranji mangrove",
+		"Kranji East mangrove",
+		"Kranji Bund mangrove (NSS)",
+		"Admiralty Park mangrove",
+		"Sungei Mandai mangrove (Site Captain: Germaine Leng)"
+	],
+	"North East Zone": [
+		"Sembawang Beach",
+		"Selimang Beach",
+		"Sungei Seletar 1 & 2",
+		"Punggol Beach 1 & 2",
+		"Coney Island (Pulau Serangoon) Beaches A - E",
+		"Pasir Ris Mangrove: Sungei Api Api.",
+		"Pasir Ris Beach 1, 2 & 6",
+		"Pasir Ris Mangrove: Sungei Tampines East and West banks",
+		"Sungei Loyang beach and mangrove."
+	],
+	"Changi": [
+		"Changi Beach Site 1",
+		"Changi Beach Site 2",
+		"Changi Beach Site 3",
+		"Changi Beach Site 4",
+		"Changi Beach Site 5",
+		"Changi Beach Site 6"
+	],
+	"Pulau Ubin": [
+		"Ketam beach",
+		"Nordin beach",
+		"Sungei Ubin",
+		"Chek Jawa North",
+		"Chek Jawa Central",
+		"Chek Jawa South"
+	],
+	"East Coast": [
+		"East Coast Park Site 1",
+		"East Coast Park Site 2",
+		"East Coast Park Site 3",
+		"East Coast Park Site 4",
+		"East Coast Park Site 5",
+		"East Coast Park 6 - 12 (RGS)"
+	],
+	"Tanah Merah ": [
+		"Tanah Merah Site 1",
+		"Tanah Merah Site 2",
+		"Tanah Merah Site 3-5",
+		"Tanah Merah Site 6",
+		"Tanah Merah Site 7"
+	],
+	"South Zone ": [
+		"Pandan Mangrove",
+		"Berlayar Creek",
+		"West Coast Park",
+		"Pulau Semakau (Site Captain: Ron Yeo)",
+		"St. John's Island"
+	]
+}
