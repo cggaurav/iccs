@@ -1,7 +1,9 @@
 const osmosis = require('osmosis')
 const moment = require('moment')
 const stringSimilarity = require('string-similarity')
-
+const json2csv = require('json2csv').parse
+const fs = require('fs')
+ 
 const EXAMPLES = [
     'http://coastalcleanup.nus.edu.sg/results/2017/nw-lck-erm.htm', // 2017
     'http://coastalcleanup.nus.edu.sg/results/2016/ne-psba-renesas.htm', // 2016
@@ -29,7 +31,8 @@ function cleanup (data) {
         .replace('Date of|Cleanup', 'Date of cleanup')
         .replace('Total number of|participants', 'Total number of participants')
         .replace('Total number of|trash bags filled', 'Total number of trash bags filled')
-        .replace('Weight of trash|bags collected (kg)', 'Weight of trash bags collected (kg)')
+        .replace('Weight of trash|bags collected', 'Weight of trash bags collected')
+        .replace('Weight of|trash bags collected', 'Weight of trash bags collected')
         .replace('Total distance|(metres)', 'Weight of trash bags collected (kg)')
         .replace('Food Wrappers (candy, chips,|etc)','Food Wrappers (candy chips etc)')
         .replace('Fishing line ( 1 meter = 1|piece)','Fishing line ( 1 meter = 1 piece )')
@@ -44,8 +47,6 @@ function cleanup (data) {
         .replace('Food Wrappers (candy,|chips, etc)', 'Food Wrappers (candy, chips, etc)')
         .replace(/1 meter = 1 piece/g, '')
         
-
-
         // .replace('Most Likely to Find Items|', '')
         // .replace('Fishing Gear||', '')
         // .replace('Packaging|Materials', '')
@@ -79,7 +80,7 @@ function zonelocation (site) {
     let ZONE = null
     for (let [key, values] of Object.entries(ZONES)) {
         values.forEach((value) => {
-            if (stringSimilarity.compareTwoStrings(site, value) > 0.7) {
+            if (stringSimilarity.compareTwoStrings(site, value) > 0.5) {
                 ZONE = key
             }
         })
@@ -89,9 +90,14 @@ function zonelocation (site) {
 }
 
 osmosis
-.get(EXAMPLES[0])
+.get(EXAMPLES[2])
+// 2017
 // .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
 // .follow('li a@href')
+// 2016
+// .get('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
+// .follow('li a@href')
+
 .set({
 	// FILTER LATER, SUCKS
     'body': 'body'
@@ -103,7 +109,7 @@ osmosis
 
     let csv = Object.assign({}, CSV_KEYS)
 
-    // console.log(JSON.stringify(body))
+    console.log(JSON.stringify(body))
 
     // URL
     csv['URL'] = document.location.href
@@ -118,7 +124,7 @@ osmosis
 
             // FIRST PASS
             Object.keys(csv).forEach((key) => {
-                if (key.includes('Most Unusual Items') && stringSimilarity.compareTwoStrings(element, key) > 0.8) {
+                if (key.includes('Most Unusual Items') && stringSimilarity.compareTwoStrings(element, key) > 0.9) {
                     csv[key] = body.slice(index + 1).join(' ')
                 }
                 else if (stringSimilarity.compareTwoStrings(element, key) > 0.8) {
@@ -152,6 +158,8 @@ osmosis
     csv['Zone Location'] = zonelocation(csv['Site Location'])
 
     console.log(csv)
+    
+    fs.appendFileSync('./data.csv', json2csv(csv, { CSV_KEYS }))
 
     next(document, data)
 })
