@@ -3,14 +3,12 @@
 	"URL": null,
 	"Zone Location": null,
 	"Type": "Beach or Mangrove",
-	"Accessibility": "Recreational or Non-Recreational",
+	"Accessibility": "Recreational OR Non-Recreational",
 	"Site Location": null,
 	"Name of Organiser": null,
 	"Organization": null,
-	"Organisation type": "School or Company or NGO or Government Agency",
+	"Organisation type": "School OR Company OR NGO OR Government Agency",
 	"Date of Cleanup": null,
-	"Latitude": null,
-	"Longitude": null,
 	"Total number of participants": null,
 	"Total number of trash bags filled": null,
 	"Weight of trash bags collected (kg)": null,
@@ -57,5 +55,7 @@
 	"Glass Pieces": null,
 	"Plastic Pieces": null,
 	"Rubber Bands": null,
-	"Most Unusual Items": null
+	"Most Unusual Items": null,
+	"Latitude": null,
+	"Longitude": null
 }

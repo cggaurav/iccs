@@ -3,8 +3,10 @@ const moment = require('moment')
 const stringSimilarity = require('string-similarity')
 const json2csv = require('json2csv').parse
 const fs = require('fs')
- 
-const EXAMPLES = [
+ const util = require('util')
+
+
+const EXAMPLE_URLS = [
     'http://coastalcleanup.nus.edu.sg/results/2017/nw-lck-erm.htm', // 2017
     'http://coastalcleanup.nus.edu.sg/results/2016/ne-psba-renesas.htm', // 2016
     'http://coastalcleanup.nus.edu.sg/results/2015/cn-cn4-itecw.htm', // 2015
@@ -30,15 +32,16 @@ function cleanup (data) {
         .replace('Total Distance|(metres)|', 'Total distance in meters|')
         .replace('Date of|Cleanup', 'Date of cleanup')
         .replace('Total number of|participants', 'Total number of participants')
-        .replace('Total number of|trash bags filled', 'Total number of trash bags filled')
+        .replace('Total number of|trash', 'Total number of trash')
+        .replace('number|of', 'number of')
         .replace('Weight of trash|bags collected', 'Weight of trash bags collected')
         .replace('Weight of|trash bags collected', 'Weight of trash bags collected')
         .replace('Total distance|(metres)', 'Weight of trash bags collected (kg)')
         .replace('Food Wrappers (candy, chips,|etc)','Food Wrappers (candy chips etc)')
         .replace('Fishing line ( 1 meter = 1|piece)','Fishing line ( 1 meter = 1 piece )')
         .replace('Fishing line ( 1 meter =|1 piece)','Fishing line ( 1 meter = 1 piece )')
-        .replace('Appliances (fridges, washers,|etc)', 'Appliances (fridges, washers, etc)')
-        .replace('Appliances (fridges|washers, etc)', 'Appliances (fridges, washers, etc)')
+        .replace('washers,|etc', 'washers, etc')
+        .replace('fridges,|washers', 'fridges, washers')
         .replace('Items of Local|Concern', 'Items of Local Concern')
         .replace('Items of|Local Concern', 'Items of Local Concern')
         .replace('Take Out Containers|(plastic)', 'Take out containers (plastic)')
@@ -56,24 +59,35 @@ function cleanup (data) {
         .split('|')
 }
 
-function year(body, index, csv) {
-    if (body[index].startsWith('2015')) {
-      csv['Year'] = '2015'
+function year(body) {
+    let data = body.slice(0, 10).join(' ')
+    let year = null
+
+    if (data.includes('2013')) {
+        year = '2013'
     }
 
-    if (body[index].startsWith('2016')) {
-      csv['Year'] = '2016'
+    if (data.includes('2014')) {
+        year = '2014'
     }
 
-    if (body[index].startsWith('2017')) {
-      csv['Year'] = '2017'
+    if (data.includes('2015')) {
+        year = '2015'
     }
 
-    if (body[index].startsWith('2018')) {
-      csv['Year'] = '2018'
+    if (data.includes('2016')) {
+        year = '2016'
     }
 
-    return csv
+    if (data.includes('2017')) {
+        year = '2017'
+    }
+
+    if (data.includes('2018')) {
+        year = '2018'
+    }
+
+    return year
 }
 
 function zonelocation (site) {
@@ -90,13 +104,22 @@ function zonelocation (site) {
 }
 
 osmosis
-.get(EXAMPLES[2])
+// .get(EXAMPLE_URLS[5])
 // 2017
 // .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
 // .follow('li a@href')
 // 2016
 // .get('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
 // .follow('li a@href')
+// 2015
+// .get('http://coastalcleanup.nus.edu.sg/results/2015/index.html')
+// .follow('li a@href')
+// 2014
+// .get('http://coastalcleanup.nus.edu.sg/results/2014/index.html')
+// .follow('li a@href')
+// 2013
+.get('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
+.follow('li a@href')
 
 .set({
 	// FILTER LATER, SUCKS
@@ -109,25 +132,23 @@ osmosis
 
     let csv = Object.assign({}, CSV_KEYS)
 
-    console.log(JSON.stringify(body))
+    console.log(util.inspect(body, { showHidden: false, depth: null, maxArrayLength: null }))
 
     // URL
     csv['URL'] = document.location.href
+    csv['Year'] = year(body)
 
     // STEP THROUGH
     body.forEach((element, index) => {
         try {
             element = element.trim()
 
-            // YEAR
-            csv = year(body, index, csv)
-
             // FIRST PASS
             Object.keys(csv).forEach((key) => {
-                if (key.includes('Most Unusual Items') && stringSimilarity.compareTwoStrings(element, key) > 0.9) {
+                if (key.includes('Most Unusual Items') && stringSimilarity.compareTwoStrings(element, key) > 0.85) {
                     csv[key] = body.slice(index + 1).join(' ')
                 }
-                else if (stringSimilarity.compareTwoStrings(element, key) > 0.8) {
+                else if (stringSimilarity.compareTwoStrings(element, key) > 0.85) {
                     csv[key] = body[index + 1]
                 }
             })  
