@@ -106,8 +106,8 @@ function zonelocation (site) {
 osmosis
 // .get(EXAMPLE_URLS[5])
 // 2017
-// .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
-// .follow('li a@href')
+.get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
+.follow('li a@href')
 // 2016
 // .get('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
 // .follow('li a@href')
@@ -118,8 +118,8 @@ osmosis
 // .get('http://coastalcleanup.nus.edu.sg/results/2014/index.html')
 // .follow('li a@href')
 // 2013
-.get('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
-.follow('li a@href')
+// .get('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
+// .follow('li a@href')
 
 .set({
 	// FILTER LATER, SUCKS
