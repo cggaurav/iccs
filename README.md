@@ -12,3 +12,10 @@ A volunteer project for [International Costal Cleanup Singapore](http://coastalc
 ## Scraping
 
 Code that pulls down what we have from an age old HTML site to be mapped into a MongoDB. (WIP)
+
+
+TODO
+
+## Remove duplicates
+## Fix kg in weight, remove (estimate)
+## DEBRIS SUMMARY (calculate programmically)

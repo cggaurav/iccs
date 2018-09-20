@@ -145,11 +145,17 @@ osmosis
 
             // FIRST PASS
             Object.keys(csv).forEach((key) => {
-                if (key.includes('Most Unusual Items') && stringSimilarity.compareTwoStrings(element, key) > 0.85) {
-                    csv[key] = body.slice(index + 1).join(' ')
-                }
-                else if (stringSimilarity.compareTwoStrings(element, key) > 0.85) {
-                    csv[key] = body[index + 1]
+                if (stringSimilarity.compareTwoStrings(element, key) > 0.85) {
+                    if (key.includes('Most Unusual Items')) {
+                        csv[key] = body.slice(index + 1).join(' ')
+                    }
+                    if (key.includes('Weight of trash bags collected (kg)')) {
+                        // Remove unwanted characters
+                        csv[key] = body[index + 1].split(' ')[0]
+                    }
+                    else {
+                        csv[key] = csv[key] || body[index + 1]
+                    }
                 }
             })  
             
