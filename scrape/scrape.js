@@ -184,6 +184,8 @@ osmosis
     // FIGURE OUT ZONE
     csv['Zone Location'] = zonelocation(csv['Site Location'])
 
+    // TODO: Rename keys
+
     console.log(csv)
     
     fs.appendFileSync('./data.csv', json2csv(csv, { CSV_KEYS }))
