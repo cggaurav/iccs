@@ -94,7 +94,7 @@ function zonelocation (site) {
     let ZONE = null
     for (let [key, values] of Object.entries(ZONES)) {
         values.forEach((value) => {
-            if (stringSimilarity.compareTwoStrings(site, value) > 0.5) {
+            if (stringSimilarity.compareTwoStrings(site || '', value) > 0.7) {
                 ZONE = key
             }
         })
@@ -103,11 +103,131 @@ function zonelocation (site) {
     return ZONE
 }
 
+function formatKeys(csv) {
+    for (let [key, values] of Object.entries(csv)) {
+        let newkey = key.toLowerCase().split(' ').join('_')
+        csv[newkey] = csv[key]
+        delete csv [key]
+    }
+
+    return csv
+}
+
+function figureType(csv) {
+    // CUSTOM RULES
+    // If Zone Location = Northwest, then type = mangrove
+    // If Site Location contains word “mangrove” or “buloh” or “sungei tampines”, then type = mangrove
+    // If not, then type = beach
+    // If Site Location is lim chu kang beach or sungei ubin or chek jawa or St John’s island,  then type = beach/mangrove
+    if (csv['Zone Location'] && csv['Zone Location'].includes('North West')) {
+        csv['Type'] = 'mangrove'
+    }
+    else if (csv['Site Location'] && (csv['Site Location'].includes('mangrove') || csv['Site Location'].includes('buloh') || csv['Site Location'].includes('sungei tampines'))) {
+        csv['Type'] = 'mangrove'
+    } 
+    else if (csv['Site Location'] && (csv['Site Location'].includes('lim chu kang') || csv['Site Location'].includes('sungei ubin') || csv['Site Location'].includes('chek jawa') || csv['Site Location'].includes('John'))) {
+        csv['Type'] = 'beach/mangrove'
+    }
+
+    return csv
+}
+
+function figureOrganizationType(csv) {
+    if(csv['Organisation'] && (csv['Organisation'].toLowerCase().includes('school') || csv['organization'].toLowerCase().includes('nus') || csv['organization'].toLowerCase().includes('poly')
+    || csv['organization'].toLowerCase().includes('university') || csv['organization'].toLowerCase().includes('college'))) {
+        csv['Organisation type'] = 'institution'
+    }
+    else if(csv['Organisation'] && csv['Organisation'].toLowerCase().includes('pte')) {
+        csv['Organisation type'] = 'corporate'
+    }
+    else {
+        csv['Organisation type'] = 'others'
+    }
+    return csv
+}
+
+function figureAccessibility(csv) {
+    if (csv['Type'] === 'mangrove') {
+        csv["Accessibility"] = 'Non-Recreational'
+    }
+    if (csv['Zone Location'] === 'North West Zone') {
+        csv["Accessibility"] = 'Non-Recreational'
+    }
+
+    ["Tanah Merah 7", "Pulau Semakau", "Pasir Ris 6", "Tanjong Remau", "Pulau Seletar", "Selimang", "Sungei", "Island", "chek jawa"].forEach((location) => {
+        if (csv['Site Location'] && (csv['Site Location'].toLowerCase().includes(location))) {
+            csv["Accessibility"] = 'Non-Recreational'       
+        }
+    })
+
+    return csv
+}
+
+function summary(csv) {
+
+    csv['Most Likely to Find Items'] = 
+        (csv["Cigarette Butts"] || 0) +
+        (csv["Food Wrappers"] || 0) +
+        (csv["Plastic Take Out Containers"] || 0) +
+        (csv["Foam Take Out Containers"] || 0) +
+        (csv["Plastic Bottle Caps"] || 0) +
+        (csv["Metal Bottle Caps"] || 0) +
+        (csv["Plastic Lids"] || 0) +
+        (csv["Straws/Stirrers"] || 0) +
+        (csv["Forks Knives Spoons"] || 0) +
+        (csv["Plastic Beverage Bottles"] || 0) +
+        (csv["Glass Beverage Bottles"] || 0) +
+        (csv["Beverage Cans"] || 0) +
+        (csv["Plastic Grocery Bags"] || 0) +
+        (csv["Other Plastic Bags"] || 0) +
+        (csv["Paper Bags"] || 0) +
+        (csv["Paper Cups & Plates"] || 0) +
+        (csv["Plastic Cups & Plates"] || 0) +
+        (csv["Foam Cups & Plates"] || 0)
+
+    csv ['Fishing Gear'] = 
+        (csv["Fishing Buoys"] || 0) +
+        (csv["Fishing Net & Pieces"] || 0) +
+        (csv["Rope"] || 0) +
+        (csv["Fishing line"] || 0)
+
+    csv ['Packaging Matertials'] = 
+        (csv["6-pack holders"] || 0) +
+        (csv["Other Plastic or Foam Packaging"] || 0) +
+        (csv["Other Plastic Bottles (oil or bleach etc)"] || 0) +
+        (csv["Strapping bands"] || 0) +
+        (csv["Tobacco Packaging or Wrappers"] || 0)
+
+    csv ['Other trash'] = 
+        (csv["Appliances (fridges or washers or etc)"] || 0) +
+        (csv["Balloons"] || 0) +
+        (csv["Cigar Tips"] || 0) +
+        (csv["Cigarette Lighters"] || 0) +
+        (csv["Construction Materials"] || 0) +
+        (csv["Fireworks"] || 0) +
+        (csv["Tyres"] || 0)
+
+    csv ['Personal Hygiene'] = 
+        (csv["Condoms"] || 0) +
+        (csv["Diapers"] || 0) +
+        (csv["Syringes"] || 0) +
+        (csv["Tampons or Tampon Applicators"] || 0)
+
+    csv ['Items of Local Concern'] = 
+        (csv["Foam Pieces"] || 0) +
+        (csv["Glass Pieces"] || 0) +
+        (csv["Plastic Pieces"] || 0) +
+        (csv["Rubber Bands"] || 0) +
+        (csv["Most Unusual Items"] || 0)
+
+    return csv
+}
+
 osmosis
 // .get(EXAMPLE_URLS[5])
 // 2017
-.get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
-.follow('li a@href')
+// .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
+// .follow('li a@href')
 // 2016
 // .get('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
 // .follow('li a@href')
@@ -118,8 +238,8 @@ osmosis
 // .get('http://coastalcleanup.nus.edu.sg/results/2014/index.html')
 // .follow('li a@href')
 // 2013
-// .get('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
-// .follow('li a@href')
+.get('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
+.follow('li a@href')
 
 .set({
 	// FILTER LATER, SUCKS
@@ -151,7 +271,7 @@ osmosis
                     }
                     if (key.includes('Weight of trash bags collected (kg)')) {
                         // Remove unwanted characters
-                        csv[key] = body[index + 1].split(' ')[0]
+                        csv[key] = body[index + 1].split(' ')[0].split('kg')[0]
                     }
                     else {
                         csv[key] = csv[key] || body[index + 1]
@@ -182,9 +302,20 @@ osmosis
     }
 
     // FIGURE OUT ZONE
+    console.log(csv['Site Location'])
+    process.exit()
     csv['Zone Location'] = zonelocation(csv['Site Location'])
 
-    // TODO: Rename keys
+    // Bad practice, but go
+    csv = figureType(csv)
+    csv = figureOrganizationType(csv)
+    csv = figureAccessibility(csv)
+
+    // Summation
+    csv = summary(csv)
+
+    // Last but not the leat
+    csv = formatKeys(csv)
 
     console.log(csv)
     
