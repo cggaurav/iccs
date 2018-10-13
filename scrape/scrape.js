@@ -302,8 +302,6 @@ osmosis
     }
 
     // FIGURE OUT ZONE
-    console.log(csv['Site Location'])
-    process.exit()
     csv['Zone Location'] = zonelocation(csv['Site Location'])
 
     // Bad practice, but go
