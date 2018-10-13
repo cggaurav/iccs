@@ -266,6 +266,10 @@ osmosis
             // FIRST PASS
             Object.keys(csv).forEach((key) => {
                 if (stringSimilarity.compareTwoStrings(element, key) > 0.85) {
+                    if (element.includes('Site Location')) {
+                        // TO BE SURE
+                        csv['Site Location'] = body[index + 1]
+                    }
                     if (key.includes('Most Unusual Items')) {
                         csv[key] = body.slice(index + 1).join(' ')
                     }
