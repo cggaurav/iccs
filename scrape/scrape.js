@@ -3,16 +3,7 @@ const moment = require('moment')
 const stringSimilarity = require('string-similarity')
 const json2csv = require('json2csv').parse
 const fs = require('fs')
- const util = require('util')
-
-
-const EXAMPLE_URLS = [
-    'http://coastalcleanup.nus.edu.sg/results/2017/nw-lck-erm.htm', // 2017
-    'http://coastalcleanup.nus.edu.sg/results/2016/ne-psba-renesas.htm', // 2016
-    'http://coastalcleanup.nus.edu.sg/results/2015/cn-cn4-itecw.htm', // 2015
-    'http://coastalcleanup.nus.edu.sg/results/2014/ne-punggol.htm',
-    'http://coastalcleanup.nus.edu.sg/results/2013/nw-lcke-sas.htm', // 2013
-]
+const util = require('util')
 
 const CSV_KEYS = require('../data/keys.json')
 const ZONES = require('../data/zones.json')
@@ -122,11 +113,13 @@ function figureType(csv) {
     if (csv['Zone Location'] && csv['Zone Location'].includes('North West')) {
         csv['Type'] = 'mangrove'
     }
-    else if (csv['Site Location'] && (csv['Site Location'].includes('mangrove') || csv['Site Location'].includes('buloh') || csv['Site Location'].includes('sungei tampines'))) {
-        csv['Type'] = 'mangrove'
-    } 
-    else if (csv['Site Location'] && (csv['Site Location'].includes('lim chu kang') || csv['Site Location'].includes('sungei ubin') || csv['Site Location'].includes('chek jawa') || csv['Site Location'].includes('John'))) {
+    else if (csv['Site Location'] && (csv['Site Location'].toLowerCase().includes('lim chu kang') || csv['Site Location'].toLowerCase().includes('sungei ubin') || csv['Site Location'].toLowerCase().includes('chek jawa') || csv['Site Location'].toLowerCase().includes('John'))) {
         csv['Type'] = 'beach/mangrove'
+    }
+    else if (csv['Site Location'] && (csv['Site Location'].toLowerCase().includes('mangrove') || csv['Site Location'].toLowerCase().includes('buloh') || csv['Site Location'].toLowerCase().includes('sungei tampines'))) {
+        csv['Type'] = 'mangrove'
+    } else {
+        csv['Type'] = 'beach'
     }
 
     return csv
@@ -155,7 +148,7 @@ function figureAccessibility(csv) {
     }
 
     ["Tanah Merah 7", "Pulau Semakau", "Pasir Ris 6", "Tanjong Remau", "Pulau Seletar", "Selimang", "Sungei", "Island", "chek jawa"].forEach((location) => {
-        if (csv['Site Location'] && (csv['Site Location'].toLowerCase().includes(location))) {
+        if (csv['Site Location'] && stringSimilarity.compareTwoStrings(csv['Site Location'].toLowerCase(), location) > 0.95) {
             csv["Accessibility"] = 'Non-Recreational'       
         }
     })
@@ -223,115 +216,118 @@ function summary(csv) {
     return csv
 }
 
-osmosis
-// .get(EXAMPLE_URLS[5])
-// 2017
-// .get('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
-// .follow('li a@href')
+function run(link) {
+
+    const EXAMPLE_URLS = [
+        'http://coastalcleanup.nus.edu.sg/results/2017/nw-lck-erm.htm', // 2017
+        'http://coastalcleanup.nus.edu.sg/results/2016/ne-psba-renesas.htm', // 2016
+        'http://coastalcleanup.nus.edu.sg/results/2015/cn-cn4-itecw.htm', // 2015
+        'http://coastalcleanup.nus.edu.sg/results/2014/ne-punggol.htm',
+        'http://coastalcleanup.nus.edu.sg/results/2013/nw-lcke-sas.htm', // 2013
+    ]
+
+    osmosis
+    // .get(EXAMPLE_URLS[5])
+    .get(link)
+    .follow('li a@href')
+    .set({
+        // FILTER LATER, SUCKS
+        'body': 'body'
+    })
+    .then((document, data, next) => {
+
+        // CLEANUP
+        let body = cleanup(data)
+
+        let csv = Object.assign({}, CSV_KEYS)
+
+        console.log(util.inspect(body, { showHidden: false, depth: null, maxArrayLength: null }))
+
+        // URL
+        csv['URL'] = document.location.href
+        csv['Year'] = year(body)
+
+        // STEP THROUGH
+        body.forEach((element, index) => {
+            try {
+                element = element.trim()
+
+                // FIRST PASS
+                Object.keys(csv).forEach((key) => {
+                    if (stringSimilarity.compareTwoStrings(element, key) > 0.85) {
+                        if (element.includes('Site Location')) {
+                            // TO BE SURE
+                            csv['Site Location'] = body[index + 1]
+                        }
+                        if (key.includes('Most Unusual Items')) {
+                            csv[key] = body.slice(index + 1).join(' ')
+                        }
+                        if (key.includes('Weight of trash bags collected (kg)')) {
+                            // Remove unwanted characters
+                            csv[key] = body[index + 1].split(' ')[0].split('kg')[0]
+                        }
+                        else {
+                            csv[key] = csv[key] || body[index + 1]
+                        }
+                    }
+                })  
+                
+            } catch (e) {
+
+            }
+
+            if (index === body.length - 1) {
+                console.log('------')
+            }
+        })
+
+        Object.keys(csv).forEach((key) => {
+            if (key.includes('Date of Cleanup')) {
+                csv[key] = moment(csv[key]).toISOString()
+            }
+        })
+
+        // MAKE A NUMEBR
+        for (let [key, value] of Object.entries(csv)) {
+            if (value && value.length > 0 && /^-{0,1}\d+$/.test(value.replace(/,/g, ''))) {
+                csv[key] = Number(value.replace(/,/g, ''))
+            }
+        }
+
+        // FIGURE OUT ZONE
+        csv['Zone Location'] = zonelocation(csv['Site Location'])
+
+        // Bad practice, but go
+        csv = figureType(csv)
+        csv = figureOrganizationType(csv)
+        csv = figureAccessibility(csv)
+
+        // Summation
+        csv = summary(csv)
+
+        // Last but not the leat
+        csv = formatKeys(csv)
+
+        console.log(csv)
+        
+        fs.appendFileSync('./data.csv', json2csv(csv, { CSV_KEYS }))
+
+        next(document, data)
+    })
+    .data(() => {})
+    .log((data) => {
+        console.log(data)
+    })
+    // .error(console.log)
+    // .debug(console.log)
+
+}
+
 // 2016
-// .get('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
-// .follow('li a@href')
+// run('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
 // 2015
-// .get('http://coastalcleanup.nus.edu.sg/results/2015/index.html')
-// .follow('li a@href')
+// run('http://coastalcleanup.nus.edu.sg/results/2015/index.html')
 // 2014
-// .get('http://coastalcleanup.nus.edu.sg/results/2014/index.html')
-// .follow('li a@href')
+// run('http://coastalcleanup.nus.edu.sg/results/2014/index.html')
 // 2013
-.get('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
-.follow('li a@href')
-
-.set({
-	// FILTER LATER, SUCKS
-    'body': 'body'
-})
-.then((document, data, next) => {
-
-    // CLEANUP
-    let body = cleanup(data)
-
-    let csv = Object.assign({}, CSV_KEYS)
-
-    console.log(util.inspect(body, { showHidden: false, depth: null, maxArrayLength: null }))
-
-    // URL
-    csv['URL'] = document.location.href
-    csv['Year'] = year(body)
-
-    // STEP THROUGH
-    body.forEach((element, index) => {
-        try {
-            element = element.trim()
-
-            // FIRST PASS
-            Object.keys(csv).forEach((key) => {
-                if (stringSimilarity.compareTwoStrings(element, key) > 0.85) {
-                    if (element.includes('Site Location')) {
-                        // TO BE SURE
-                        csv['Site Location'] = body[index + 1]
-                    }
-                    if (key.includes('Most Unusual Items')) {
-                        csv[key] = body.slice(index + 1).join(' ')
-                    }
-                    if (key.includes('Weight of trash bags collected (kg)')) {
-                        // Remove unwanted characters
-                        csv[key] = body[index + 1].split(' ')[0].split('kg')[0]
-                    }
-                    else {
-                        csv[key] = csv[key] || body[index + 1]
-                    }
-                }
-            })  
-            
-        } catch (e) {
-
-        }
-
-        if (index === body.length - 1) {
-            console.log('------')
-        }
-    })
-
-    Object.keys(csv).forEach((key) => {
-        if (key.includes('Date of Cleanup')) {
-            csv[key] = moment(csv[key]).toISOString()
-        }
-    })
-
-    // MAKE A NUMEBR
-    for (let [key, value] of Object.entries(csv)) {
-        if (value && value.length > 0 && /^-{0,1}\d+$/.test(value.replace(/,/g, ''))) {
-            csv[key] = Number(value.replace(/,/g, ''))
-        }
-    }
-
-    // FIGURE OUT ZONE
-    csv['Zone Location'] = zonelocation(csv['Site Location'])
-
-    // Bad practice, but go
-    csv = figureType(csv)
-    csv = figureOrganizationType(csv)
-    csv = figureAccessibility(csv)
-
-    // Summation
-    csv = summary(csv)
-
-    // Last but not the leat
-    csv = formatKeys(csv)
-
-    console.log(csv)
-    
-    fs.appendFileSync('./data.csv', json2csv(csv, { CSV_KEYS }))
-
-    next(document, data)
-})
-.data(() => {})
-.log((data) => {
-    console.log(data)
-})
-// .error(console.log)
-// .debug(console.log)
-
-
-// console.log(zonelocation('Lim Chu Kang Beach'))
-// console.log(stringSimilarity.compareTwoStrings('Lim Chu Kang Beach', 'Lim Chu Kang mangrove'))
+// run('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
