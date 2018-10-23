@@ -323,11 +323,13 @@ function run(link) {
 
 }
 
+// 2017
+// run('http://coastalcleanup.nus.edu.sg/results/2017/index.html')
 // 2016
-run('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
-// 2015
+// run('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
+// // 2015
 // run('http://coastalcleanup.nus.edu.sg/results/2015/index.html')
-// 2014
+// // 2014
 // run('http://coastalcleanup.nus.edu.sg/results/2014/index.html')
-// 2013
+// // 2013
 // run('http://coastalcleanup.nus.edu.sg/results/2013/index.html')
