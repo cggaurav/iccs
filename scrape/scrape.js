@@ -126,15 +126,15 @@ function figureType(csv) {
 }
 
 function figureOrganizationType(csv) {
-    if(csv['Organisation'] && (csv['Organisation'].toLowerCase().includes('school') || csv['organization'].toLowerCase().includes('nus') || csv['organization'].toLowerCase().includes('poly')
-    || csv['organization'].toLowerCase().includes('university') || csv['organization'].toLowerCase().includes('college'))) {
-        csv['Organisation type'] = 'institution'
+    if(csv['Organization'] && (csv['Organization'].toLowerCase().includes('school') || csv['Organization'].toLowerCase().includes('nus') || csv['Organization'].toLowerCase().includes('poly')
+    || csv['Organization'].toLowerCase().includes('university') || csv['Organization'].toLowerCase().includes('college'))) {
+        csv['Organization Type'] = 'institution'
     }
-    else if(csv['Organisation'] && csv['Organisation'].toLowerCase().includes('pte')) {
-        csv['Organisation type'] = 'corporate'
+    else if(csv['Organization'] && csv['Organization'].toLowerCase().includes('pte')) {
+        csv['Organization Type'] = 'corporate'
     }
     else {
-        csv['Organisation type'] = 'others'
+        csv['Organization Type'] = 'others'
     }
     return csv
 }
@@ -324,7 +324,7 @@ function run(link) {
 }
 
 // 2016
-// run('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
+run('http://coastalcleanup.nus.edu.sg/results/2016/index.html')
 // 2015
 // run('http://coastalcleanup.nus.edu.sg/results/2015/index.html')
 // 2014
