@@ -17,10 +17,13 @@ Code that pulls down what we have from an age old HTML site to be mapped into a 
 TODO
 
 * Remove duplicates
-* Fix kg in weight, remove (estimate)
-* DEBRIS SUMMARY (calculate programmically)
 
 ## Scripts
 
 * `mongoimport -d iccs -c cleanpus --type csv --file data.csv --headerline`
 
+## Check Mistakes 
+
+* Emtpy fields in CSV
+* TOTAL ITEMS 
+* PLASTIC/METAL etc
